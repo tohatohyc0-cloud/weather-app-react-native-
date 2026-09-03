@@ -1,0 +1,4 @@
+npm install --global eas-cli
+npx create-expo-app weather-app
+cd weather-app
+eas init --id dc1db425-b4ea-4fe9-bf09-4761704318dd
