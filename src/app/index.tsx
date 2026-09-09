@@ -162,6 +162,9 @@ export default function HomeScreen() {
               const next = !notifications;
               setNotifications(next);
               AsyncStorage.setItem('notifications', String(next));
+              if (!next) {
+                Notifications.cancelAllScheduledNotificationsAsync();
+              }
             }}
           ></Switch>
         </View>
