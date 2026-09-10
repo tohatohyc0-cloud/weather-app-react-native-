@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { WeatherResponse } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
 import * as Notifications from 'expo-notifications';
 
 Notifications.setNotificationHandler({
@@ -17,6 +18,32 @@ Notifications.setNotificationHandler({
     shouldSetBadge: true,
   }),
 });
+
+const cities = [
+  { "city": "Новочеркасск", "latitude": 47.4119248, "longitude": 40.1042066 },
+  { "city": "Азов", "latitude": 47.1120631, "longitude": 39.4232597 },
+  { "city": "Аксай", "latitude": 47.2676075, "longitude": 39.8755485 },
+  { "city": "Батайск", "latitude": 47.138321, "longitude": 39.7508382 },
+  { "city": "Белая Калитва", "latitude": 48.176948, "longitude": 40.8033169 },
+  { "city": "Волгодонск", "latitude": 47.5165181, "longitude": 42.1984531 },
+  { "city": "Гуково", "latitude": 48.0449422, "longitude": 39.9484635 },
+  { "city": "Донецк", "latitude": 48.3350928, "longitude": 39.9460654 },
+  { "city": "Зверево", "latitude": 48.043451, "longitude": 40.1264948 },
+  { "city": "Зерноград", "latitude": 46.8494991, "longitude": 40.312765 },
+  { "city": "Каменск-Шахтинский", "latitude": 48.3204412, "longitude": 40.268874 },
+  { "city": "Константиновск", "latitude": 47.5773456, "longitude": 41.0967362 },
+  { "city": "Красный Сулин", "latitude": 47.8830826, "longitude": 40.0781385 },
+  { "city": "Миллерово", "latitude": 48.925821, "longitude": 40.3983302 },
+  { "city": "Морозовск", "latitude": 48.3511724, "longitude": 41.8308006 },
+  { "city": "Новошахтинск", "latitude": 47.7576522, "longitude": 39.9364709 },
+  { "city": "Пролетарск", "latitude": 46.7038968, "longitude": 41.7274533 },
+  { "city": "Ростов-на-Дону", "latitude": 47.2224364, "longitude": 39.7187866 },
+  { "city": "Сальск", "latitude": 46.4751689, "longitude": 41.5412229 },
+  { "city": "Семикаракорск", "latitude": 47.5177981, "longitude": 40.811585 },
+  { "city": "Таганрог", "latitude": 47.2094907, "longitude": 38.935154 },
+  { "city": "Цимлянск", "latitude": 47.6477668, "longitude": 42.093022 },
+  { "city": "Шахты", "latitude": 47.7084247, "longitude": 40.2159154 }
+]
 
 type location = {
   name: string
@@ -46,6 +73,7 @@ export default function HomeScreen() {
   const [hour, setHour] = useState<number>(0)
   const [notifications, setNotifications] = useState<boolean>(true)
   const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [selectedSity, setSelectedSity] = useState<number>(0);
   const [location, setLocation] = useState<location>({
     name: "Новочеркасск",
     latitude: 47.42,
@@ -54,6 +82,13 @@ export default function HomeScreen() {
   const [nameInput, setNameInput] = useState(location.name);
   const [latInput, setLatInput] = useState(String(location.latitude));
   const [lonInput, setLonInput] = useState(String(location.longitude));
+
+  useEffect(() => {
+    setLocation({name: cities[selectedSity].city, latitude: cities[selectedSity].latitude, longitude: cities[selectedSity].longitude })
+    setNameInput(cities[selectedSity].city)
+    setLatInput(cities[selectedSity].latitude.toString())
+    setLonInput(cities[selectedSity].longitude.toString())
+  }, [selectedSity])
 
   useEffect(() => {
     AsyncStorage.getItem('notifications').then((saved) => {
@@ -103,10 +138,10 @@ export default function HomeScreen() {
               setModalVisible((visible) => !visible)
           }}>
           <Text style={styles.Text}>{location.name}</Text>
-            <View style={styles.CityContainer}>
+            {/*<View style={styles.CityContainer}>
               <Text style={styles.Text}>{location.latitude}</Text>
               <Text style={styles.Text}>{location.longitude}</Text>
-            </View>
+            </View>*/}
         </Pressable>
 
         {/* температура и погода сейчас */}
@@ -193,7 +228,7 @@ export default function HomeScreen() {
                   if(Number(text) > 90 || Number(text) < -90) return
                   const filtered = text.replace(/[^0-9.,\-]/g, '');
                   setLatInput(filtered);
-                }} maxLength={5} keyboardType="numeric" style={styles.Input}/>
+                }} maxLength={10} keyboardType="numeric" style={styles.Input}/>
               </View>
               <View style={styles.inputPersonInfo}>
                 <Text style={styles.Text}>Долгота:</Text>
@@ -201,9 +236,25 @@ export default function HomeScreen() {
                   if(Number(text) > 180 || Number(text) < -180) return
                   const filtered = text.replace(/[^0-9.,\-]/g, '');
                   setLonInput(filtered);
-                }} maxLength={5} keyboardType="numeric" style={styles.Input}/>
+                }} maxLength={10} keyboardType="numeric" style={styles.Input}/>
               </View>
             </View>
+
+            <Text style={styles.ModalText}>Выбрать готовую локацию:</Text>
+            <Picker
+              style={styles.ModalPicker}
+              selectedValue={selectedSity}
+              dropdownIconColor="white"
+              onValueChange={(itemValue, itemIndex) => {
+                setSelectedSity(itemValue)
+                setModalVisible((visible) => !visible) 
+              }}>
+              {cities.map((city, index) => {
+                return(
+                  <Picker.Item label={city.city} value={index} key={index} style={{fontSize: 25}}/>
+                )
+              })}
+            </Picker>
 
             <Pressable
               style={styles.CloseModal}
@@ -222,7 +273,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  ModalPicker: {
+    height: "auto",
+    fontSize: 20,
+    color: "white"
+  },
   ModalText: {
+    marginLeft: 5,
     marginTop: 15,
     fontSize: 20,
     color: "white"
@@ -254,7 +311,7 @@ const styles = StyleSheet.create({
     color: "white"
   },
   CloseModal: {
-    marginTop: 30,
+    marginTop: 15,
     display: "flex",
     marginLeft: "auto",
     marginRight: "auto",
@@ -266,7 +323,7 @@ const styles = StyleSheet.create({
   ModalView: {
     margin: "auto",
     width: 300,
-    height: 300,
+    height: 380,
     backgroundColor: "rgb(61, 142, 161)",
     borderRadius: 15,
   },
@@ -318,11 +375,11 @@ const styles = StyleSheet.create({
   City: {
     marginLeft: "auto",
     marginRight: "auto",
-    height: 120,
+    height: 70,
     width: "100%",
     alignItems: "center",
     paddingBottom: 25,
-    marginTop: 25,
+    marginTop: 55,
     backgroundColor: "rgb(82, 194, 219)",
     borderRadius: 25
   },

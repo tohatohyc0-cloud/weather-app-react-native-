@@ -34,7 +34,7 @@ TaskManager.defineTask(WEATHER_TASK, async () => {
     const weather = await fetchWeather(location.latitude, location.longitude);
 
     const now = new Date();
-    const nextHour = now.getHours() + 1;
+    const nextHour = now.getHours() + 2;
 
     const temp = Math.round(weather.hourly.temperature_2m[nextHour]);
     const category = getWeatherCategory(weather.hourly.weather_code[nextHour]);
