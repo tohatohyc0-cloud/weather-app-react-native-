@@ -37,9 +37,7 @@ async function registerWeatherTask() {
 }
 
 import HomeScreen from '.';
-
 SplashScreen.preventAutoHideAsync();
-
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 

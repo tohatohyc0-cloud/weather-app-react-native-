@@ -1,14 +1,15 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet, Text, ScrollView, View, Switch, Modal, Pressable, TextInput  } from 'react-native';
-import HourTemperature from '@/components/ui/HourTemperature';
 import DayTemperature from '@/components/ui/DayTemperature';
+import HourTemperature from '@/components/ui/HourTemperature';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useEffect, useState } from 'react';
 import { WeatherResponse } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
+import axios from 'axios';
+import bcrypt from "bcryptjs";
 import * as Notifications from 'expo-notifications';
+import { useEffect, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import 'react-native-get-random-values';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -79,9 +80,13 @@ export default function HomeScreen() {
     latitude: 47.42,
     longitude: 40.09
   })
-  const [nameInput, setNameInput] = useState(location.name);
-  const [latInput, setLatInput] = useState(String(location.latitude));
-  const [lonInput, setLonInput] = useState(String(location.longitude));
+  const [nameInput, setNameInput] = useState(location.name)
+  const [latInput, setLatInput] = useState(String(location.latitude))
+  const [lonInput, setLonInput] = useState(String(location.longitude))
+  const [modalEnterVisible, setModalEnterVisible] = useState<boolean>(true)
+  const [auth, setAuth] = useState<string | undefined>(undefined)
+  const [login, setLogin] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
 
   useEffect(() => {
     setLocation({name: cities[selectedSity].city, latitude: cities[selectedSity].latitude, longitude: cities[selectedSity].longitude })
@@ -99,6 +104,14 @@ export default function HomeScreen() {
     .then((saved) => {
       if (saved) {
         setLocation(JSON.parse(saved));
+      }
+    })
+    .catch((error) => console.log(error.message))
+
+    AsyncStorage.getItem('auth')
+    .then((saved) => {
+      if (saved) {
+        setAuth(saved);
       }
     })
     .catch((error) => console.log(error.message))
@@ -204,6 +217,16 @@ export default function HomeScreen() {
           ></Switch>
         </View>
 
+        {/* контактная информация */}
+        <View style={styles.Info}>
+          <Text style={styles.InfoText}>SemKovVol</Text>
+          <Text style={styles.InfoText}>Контактная информация: </Text>
+          <Text style={styles.InfoText}>Семочкин А.Б </Text>
+          <Text style={styles.InfoText}>Волков В.С </Text>
+          <Text style={styles.InfoText}>Коваленко Е.Я </Text>
+          <Text style={styles.InfoText}>WeatherApp@gmail.com </Text>
+        </View>
+
         {/* модалка локации */}
         <Modal 
           style={styles.Modal}
@@ -267,12 +290,72 @@ export default function HomeScreen() {
           </View>
         </Modal>
 
+
+        {/*модалка входа */}
+        <Modal 
+          style={[styles.Modal, {width: "100%", height: "100%"}]}
+          animationType="slide"
+          visible={modalEnterVisible}
+          onRequestClose={() => {
+            setModalEnterVisible(!modalEnterVisible);
+          }}>
+          <View style={[styles.ModalView, {width: "100%", height: "100%"}]}>
+            <View style={[styles.inputContainer, {flexDirection: "column", gap: 0, marginTop: "auto", marginBottom: "auto"}]}>
+              <View style={styles.inputPersonInfo}>
+                <Text style={styles.Text}>логин:</Text>
+                <TextInput 
+                  value={login} 
+                  onChangeText={setLogin} 
+                  style={[styles.Input, {width: 300}]}/>
+              </View>
+              <View style={styles.inputPersonInfo}>
+                <Text style={styles.Text}>пароль:</Text>
+                <TextInput 
+                  value={password} 
+                  onChangeText={setPassword} 
+                  style={[styles.Input, {width: 300}]}/>
+              </View>
+            </View>
+
+            <Pressable
+              style={[styles.CloseModal, {marginBottom: 100, width: "auto", height: 80}]}
+              onPress={() => {
+                if(!login || !password) return
+
+                if(!auth){
+                  const salt = bcrypt.genSaltSync(10);
+                  const hash = bcrypt.hashSync(`${login?.trim()}:${password?.trim()}`, salt);
+
+                  AsyncStorage.setItem('auth', hash)
+                    .catch((error) => console.log('Failed to save location:', error.message))
+                  setModalEnterVisible(false)
+                }
+
+                if(auth){
+                  bcrypt.compareSync(`${login?.trim()}:${password?.trim()}`, auth) ? setModalEnterVisible(false) : ""
+                }
+              }}>
+              <Text style={styles.CloseModalText}>{auth ? "войти" : "зарегестрироваться"}</Text>
+            </Pressable>
+          </View>
+        </Modal>
+
         {Platform.OS === 'web'}
       </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  InfoText: {
+    fontSize: 20,
+    color: "white",
+    alignSelf: "center"
+  },
+  Info: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  },
   ModalPicker: {
     height: "auto",
     fontSize: 20,
@@ -304,6 +387,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   CloseModalText: {
+    marginTop: "auto",
+    marginBottom: "auto",
     marginLeft: "auto",
     marginRight: "auto",
     width: "auto",

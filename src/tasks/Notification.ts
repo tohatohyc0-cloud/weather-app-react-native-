@@ -47,7 +47,7 @@ TaskManager.defineTask(WEATHER_TASK, async () => {
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: 60 * 60,
-        repeats: false,
+        repeats: true,
       }
     });
 
