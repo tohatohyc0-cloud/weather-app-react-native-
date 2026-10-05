@@ -224,7 +224,7 @@ export default function HomeScreen() {
           <Text style={styles.InfoText}>Семочкин А.Б </Text>
           <Text style={styles.InfoText}>Волков В.С </Text>
           <Text style={styles.InfoText}>Коваленко Е.Я </Text>
-          <Text style={styles.InfoText}>WeatherApp@gmail.com </Text>
+          <Text style={styles.InfoText}>WeatherApp372@gmail.com </Text>
         </View>
 
         {/* модалка локации */}
